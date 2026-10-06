@@ -1,0 +1,104 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Claude workspace API",
+    "version": "1.0.0",
+    "description": "Runs the Claude Agent SDK in one workspace folder. Read cannot edit files. Write can. A new workspace is a copy of workspaces/_template."
+  },
+  "servers": [{ "url": "http://127.0.0.1:8787" }],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Required only when API_TOKEN is set."
+      }
+    },
+    "schemas": {
+      "Prompt": {
+        "type": "object",
+        "required": ["prompt"],
+        "properties": {
+          "prompt": { "type": "string" }
+        }
+      },
+      "CreateWorkspace": {
+        "type": "object",
+        "required": ["id"],
+        "properties": {
+          "id": { "type": "string", "example": "gamma" },
+          "title": { "type": "string", "example": "Gamma" }
+        }
+      },
+      "Answer": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "workspace": { "type": "string" },
+          "mode": { "type": "string", "enum": ["read", "write"] },
+          "answer": { "type": "string" },
+          "sessionId": { "type": "string" },
+          "durationMs": { "type": "number" },
+          "numTurns": { "type": "number" },
+          "costUsd": { "type": "number" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/workspaces": {
+      "get": {
+        "summary": "List workspaces",
+        "responses": {
+          "200": { "description": "Workspace ids" }
+        }
+      },
+      "post": {
+        "summary": "Create a workspace from the template",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": { "schema": { "$ref": "#/components/schemas/CreateWorkspace" } }
+          }
+        },
+        "responses": {
+          "201": { "description": "Created" },
+          "400": { "description": "Invalid id" },
+          "409": { "description": "Already exists" }
+        }
+      }
+    },
+    "/workspaces/{id}/read": {
+      "post": {
+        "summary": "Ask a workspace without editing files",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Prompt" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Answer" } } }
+          }
+        }
+      }
+    },
+    "/workspaces/{id}/write": {
+      "post": {
+        "summary": "Ask a workspace and allow Edit and Write",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Prompt" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "Answer",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Answer" } } }
+          }
+        }
+      }
+    }
+  }
+}
